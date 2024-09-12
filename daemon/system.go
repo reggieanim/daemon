@@ -38,7 +38,6 @@ func (a *App) getSystemMonitoringData() (string, error) {
 		cpuUsage = cpuResponse.Response[0]["cpu_usage"]
 	}
 
-	// Query memory usage
 	memoryQuery := "SELECT (total_available_bytes * 100.0) / total_bytes AS memory_usage FROM memory_info"
 	memoryResponse, err := client.Query(memoryQuery)
 	if err != nil {
@@ -50,7 +49,6 @@ func (a *App) getSystemMonitoringData() (string, error) {
 		memoryUsage = memoryResponse.Response[0]["memory_usage"]
 	}
 
-	// Query disk usage
 	diskQuery := fmt.Sprintf("SELECT (blocks_available * 100.0) / blocks_size AS disk_usage FROM mounts WHERE path = '%s'", a.config.MonitorDirectory)
 	diskResponse, err := client.Query(diskQuery)
 	if err != nil {
@@ -62,7 +60,6 @@ func (a *App) getSystemMonitoringData() (string, error) {
 		diskUsage = diskResponse.Response[0]["disk_usage"]
 	}
 
-	// Query system uptime
 	uptimeQuery := "SELECT total_seconds AS system_uptime FROM uptime"
 	uptimeResponse, err := client.Query(uptimeQuery)
 	if err != nil {
@@ -74,7 +71,6 @@ func (a *App) getSystemMonitoringData() (string, error) {
 		systemUptime = uptimeResponse.Response[0]["system_uptime"]
 	}
 
-	// Aggregate system stats
 	systemStats := SystemStats{
 		CPUUsage:     cpuUsage,
 		MemoryUsage:  memoryUsage,
@@ -82,7 +78,6 @@ func (a *App) getSystemMonitoringData() (string, error) {
 		SystemUptime: systemUptime,
 	}
 
-	// Convert system stats to JSON
 	jsonData, err := json.MarshalIndent(systemStats, "", "  ")
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal system stats to JSON: %w", err)

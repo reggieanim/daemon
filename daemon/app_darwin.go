@@ -21,6 +21,11 @@ type App struct {
 	workerQueue       chan string
 	timerLogs         []string
 	mutex             sync.Mutex
+
+	stopWorker    chan struct{}
+	stopTimer     chan struct{}
+	workerRunning bool
+	timerRunning  bool
 }
 
 func NewApp() *App {
@@ -28,6 +33,8 @@ func NewApp() *App {
 		workerQueue: make(chan string, 100),
 		timerLogs:   []string{},
 		logger:      log.New(os.Stdout, "AppLogger: ", log.LstdFlags),
+		stopWorker:  make(chan struct{}),
+		stopTimer:   make(chan struct{}),
 	}
 }
 
@@ -45,50 +52,84 @@ func (a *App) startup(ctx context.Context) {
 	go a.timerThread()
 }
 
-func (a *App) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's show time!", name)
+func (a *App) workerThread() {
+	a.logger.Println("Worker thread started")
+	for {
+		select {
+		case cmdStr := <-a.workerQueue:
+			a.logger.Printf("Executing command: %s", cmdStr)
+			cmd := exec.Command("sh", "-c", cmdStr)
+			output, err := cmd.CombinedOutput()
+			if err != nil {
+				a.logger.Printf("Error executing command: %v, output: %s", err, output)
+				continue
+			}
+			a.logger.Printf("Command output: %s", output)
+		case <-a.stopWorker:
+			a.logger.Println("Worker thread stopped")
+			return
+		}
+	}
 }
 
-func (a *App) workerThread() {
-	for cmdStr := range a.workerQueue {
-		a.logger.Printf("Executing command: %s", cmdStr)
-
-		// Split the command string into executable and arguments
-		cmd := exec.Command("sh", "-c", cmdStr)
-
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			a.logger.Printf("Error executing command: %v, output: %s", err, output)
-			continue
-		}
-
-		a.logger.Printf("Command output: %s", output)
+func (a *App) StartService() (string, error) {
+	if !a.workerRunning {
+		go a.workerThread()
+		a.workerRunning = true
 	}
+	if !a.timerRunning {
+		go a.timerThread()
+		a.timerRunning = true
+	}
+	return "Service started", nil
+}
+
+func (a *App) StopService() (string, error) {
+	if a.workerRunning {
+		a.stopWorker <- struct{}{}
+		a.workerRunning = false
+	}
+	if a.timerRunning {
+		a.stopTimer <- struct{}{}
+		a.timerRunning = false
+	}
+	return "Service stopped", nil
 }
 
 func (a *App) timerThread() {
 	ticker := time.NewTicker(time.Duration(a.config.CheckFrequency) * time.Second)
 	defer ticker.Stop()
+	a.logger.Println("Timer thread started")
 
-	for range ticker.C {
-		stats, err := a.getFileModificationStats()
-		if err != nil {
-			a.logger.Printf("Error getting file modification stats: %v", err)
-			continue
-		}
+	for {
+		select {
+		case <-ticker.C:
+			stats, err := a.getFileModificationStats()
+			if err != nil {
+				a.logger.Printf("Error getting file modification stats: %v", err)
+				continue
+			}
 
-		systemStats, err := a.getSystemMonitoringData()
-		fmt.Println(systemStats)
-		if err != nil {
-			a.logger.Printf("Error getting system monitoring data: %v", err)
-			continue
-		}
-		a.mutex.Lock()
-		a.timerLogs = append(a.timerLogs, stats)
-		a.mutex.Unlock()
+			systemStats, err := a.getSystemMonitoringData()
+			if err != nil {
+				a.logger.Printf("Error getting system monitoring data: %v", err)
+				continue
+			}
 
-		if err := a.sendStatsToAPI(stats, systemStats); err != nil {
-			a.logger.Printf("Error sending stats to API: %v", err)
+			a.mutex.Lock()
+			a.timerLogs = append(a.timerLogs, stats)
+			a.mutex.Unlock()
+
+			if err := a.saveStatsToFile(stats, systemStats); err != nil {
+				a.logger.Printf("Error saving stats to file: %v", err)
+			}
+
+			if err := a.sendStatsToAPI(stats, systemStats); err != nil {
+				a.logger.Printf("Error sending stats to API: %v", err)
+			}
+		case <-a.stopTimer:
+			a.logger.Println("Timer thread stopped")
+			return
 		}
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/go-playground/validator"
 	"github.com/spf13/viper"
@@ -47,7 +48,8 @@ func (a *App) loadConfig(ctx context.Context) error {
 			a.logger.Printf("No directory selected. Using default directory: %s", monitorDir)
 		}
 
-		// Create the default configuration file
+		monitorDir = filepath.Clean(monitorDir)
+
 		if err := a.createDefaultConfig(configPath, monitorDir); err != nil {
 			return fmt.Errorf("failed to create default config: %w", err)
 		}
@@ -73,12 +75,13 @@ func (a *App) loadConfig(ctx context.Context) error {
 }
 
 func (a *App) createDefaultConfig(configPath string, monitorDir string) error {
+	monitorDir = filepath.Clean(monitorDir)
+	monitorDir = strings.ReplaceAll(monitorDir, `\`, `\\`)
 	defaultConfig := fmt.Sprintf(`
 monitor_directory: "%s"
-check_frequency: 5
+check_frequency: 60
 api_endpoint: "https://eo13t4hn4shbd6x.m.pipedream.net"
 `, monitorDir)
 
-	// Use 0644 as the file permission; it's cross-platform
 	return os.WriteFile(configPath, []byte(defaultConfig), 0644)
 }

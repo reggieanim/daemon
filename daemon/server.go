@@ -18,7 +18,6 @@ func (a *App) sendStatsToAPI(fileStats string, systemMonitor string) error {
 		return fmt.Errorf("failed to marshal stats to JSON: %w", err)
 	}
 
-	// was not in the requirements to make it a config
 	apiEndpoint := a.config.APIEndpoint
 
 	req, err := http.NewRequest("POST", apiEndpoint, bytes.NewBuffer(data))
@@ -46,6 +45,7 @@ func (a *App) sendStatsToAPI(fileStats string, systemMonitor string) error {
 func (a *App) startHTTPServer() {
 	http.HandleFunc("/health", a.healthCheckHandler)
 	http.HandleFunc("/logs", a.logsHandler)
+	http.HandleFunc("/cpu-command", a.cpuCommandHandler)
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		a.logger.Fatalf("Failed to start HTTP server: %v", err)

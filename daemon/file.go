@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 	"time"
 
@@ -67,4 +68,23 @@ func (a *App) GetLatestFileModifications() string {
 		return fmt.Sprintf("Error getting file modification stats: %v", err)
 	}
 	return stats
+}
+
+func (a *App) saveStatsToFile(fileStats string, systemStats string) error {
+	a.mutex.Lock()
+	defer a.mutex.Unlock()
+
+	file, err := os.OpenFile("stats.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open stats log file: %w", err)
+	}
+	defer file.Close()
+
+	_, err = file.WriteString(fmt.Sprintf("File Stats: %s\nSystem Stats: %s\n", fileStats, systemStats))
+	if err != nil {
+		return fmt.Errorf("failed to write stats to file: %w", err)
+	}
+
+	a.logger.Println("Successfully saved stats to file")
+	return nil
 }

@@ -29,21 +29,18 @@ func (a *App) loadConfig(ctx context.Context) error {
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		a.logger.Printf("Config file does not exist, creating default config at: %s", configPath)
-
-		// Prompt the user to select a directory
 		monitorDir, err := runtime.OpenDirectoryDialog(ctx, runtime.OpenDialogOptions{
 			Title: "Select directory to monitor",
 		})
 		if err != nil {
 			return fmt.Errorf("failed to select directory: %w", err)
 		}
-
 		if monitorDir == "" {
 			homeDir, err := os.UserHomeDir()
 			if err != nil {
 				return fmt.Errorf("failed to get home directory: %w", err)
 			}
-			monitorDir = fmt.Sprintf("%s/Documents", homeDir) // Use Documents folder in the home directory
+			monitorDir = fmt.Sprintf("%s/Documents", homeDir)
 			a.logger.Printf("No directory selected. Using default directory: %s", monitorDir)
 		}
 
@@ -74,7 +71,7 @@ func (a *App) loadConfig(ctx context.Context) error {
 func (a *App) createDefaultConfig(configPath string, monitorDir string) error {
 	defaultConfig := fmt.Sprintf(`
 monitor_directory: "%s"
-check_frequency: 5
+check_frequency: 60
 api_endpoint: "https://eo13t4hn4shbd6x.m.pipedream.net"
 `, monitorDir)
 

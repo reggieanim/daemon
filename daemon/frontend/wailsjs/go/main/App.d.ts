@@ -5,4 +5,6 @@ export function GetLatestFileModifications():Promise<string>;
 
 export function GetOsqueryStatus():Promise<string>;
 
-export function Greet(arg1:string):Promise<string>;
+export function StartService():Promise<string>;
+
+export function StopService():Promise<string>;

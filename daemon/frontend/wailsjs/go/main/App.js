@@ -10,6 +10,10 @@ export function GetOsqueryStatus() {
   return window['go']['main']['App']['GetOsqueryStatus']();
 }
 
-export function Greet(arg1) {
-  return window['go']['main']['App']['Greet'](arg1);
+export function StartService() {
+  return window['go']['main']['App']['StartService']();
+}
+
+export function StopService() {
+  return window['go']['main']['App']['StopService']();
 }

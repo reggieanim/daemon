@@ -9,7 +9,6 @@ import (
 )
 
 func (a *App) initOsquery() error {
-	// Discover the osquery named pipe on Windows
 	namedPipePath, err := a.discoverOsqueryPipe()
 	if err != nil {
 		return fmt.Errorf("failed to discover osquery named pipe: %w", err)
@@ -17,7 +16,6 @@ func (a *App) initOsquery() error {
 
 	a.osquerySocketPath = namedPipePath
 
-	// Create an osquery extension manager server using the named pipe path
 	server, err := osquery.NewExtensionManagerServer("file_monitor", namedPipePath)
 	if err != nil {
 		return fmt.Errorf("failed to create osquery extension: %w", err)
@@ -25,7 +23,6 @@ func (a *App) initOsquery() error {
 
 	a.osqueryInstance = server
 
-	// Run the osquery extension manager server
 	go func() {
 		if err := server.Run(); err != nil {
 			wailsRuntime.LogErrorf(a.ctx, "osquery extension server stopped: %v", err)
@@ -35,12 +32,9 @@ func (a *App) initOsquery() error {
 	return nil
 }
 
-// discoverOsqueryPipe checks for the osquery named pipe on Windows
 func (a *App) discoverOsqueryPipe() (string, error) {
-	// Named pipe used by osquery on Windows
 	namedPipe := `\\.\pipe\osquery.em`
 
-	// Check if the named pipe exists
 	if _, err := os.Stat(namedPipe); err == nil {
 		return namedPipe, nil
 	}
