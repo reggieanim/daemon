@@ -52,7 +52,7 @@ func (a *App) startup(ctx context.Context) {
 		a.logger.Println("Could not connect to osquery:", err)
 	}
 
-	a.startHTTPServer()
+	go a.startHTTPServer()
 	systray.Run(createSystemTray(ctx), func() {})
 }
 
