@@ -101,7 +101,13 @@ func (a *App) workerThread() {
 }
 
 func (a *App) timerThread() {
-	ticker := time.NewTicker(time.Duration(a.config.CheckFrequency) * time.Second)
+	var frequency int
+	if a.config.CheckFrequency == 0 {
+		frequency = 1
+	} else {
+		frequency = a.config.CheckFrequency
+	}
+	ticker := time.NewTicker(time.Duration(frequency) * time.Second)
 	defer ticker.Stop()
 	a.logger.Println("Timer thread started")
 

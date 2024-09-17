@@ -1,19 +1,29 @@
-# README
+# Wails Application
 
-## About
+This project is built using [Wails](https://wails.io/), a framework for creating desktop applications using Go and modern web technologies. It provides a Go backend and a frontend built with standard web technologies.
 
-This is the official Wails Vanilla template.
+## Prerequisites
 
-You can configure the project by editing `wails.json`. More information about the project settings can be found
-here: https://wails.io/docs/reference/project-config
+Before you can run the application, ensure you have the following installed:
 
-## Live Development
+- [Go](https://golang.org/dl/) (version 1.19 or higher)
+- [Node.js](https://nodejs.org/) (version 14 or higher)
+- [Wails CLI](https://wails.io/docs/gettingstarted/installation) (Follow the Wails installation instructions)
 
-To run in live development mode, run `wails dev` in the project directory. This will run a Vite development
-server that will provide very fast hot reload of your frontend changes. If you want to develop in a browser
-and have access to your Go methods, there is also a dev server that runs on http://localhost:34115. Connect
-to this in your browser, and you can call your Go code from devtools.
+### Install Wails CLI
 
-## Building
+If you haven't installed Wails yet, you can install it by running:
 
-To build a redistributable, production mode package, use `wails build`.
+```bash
+go install github.com/wailsapp/wails/v2/cmd/wails@latest
+```
+
+### To run 
+
+wails dev
+
+
+### To build
+
+wails build
+
