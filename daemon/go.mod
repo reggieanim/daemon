@@ -2,7 +2,7 @@ module daemon
 
 go 1.23
 
-replace github.com/wailsapp/wails/v2 => C:\Users\animr\wails\v2
+// replace github.com/wailsapp/wails/v2 => C:\Users\animr\wails\v2
 
 toolchain go1.23.1
 
@@ -11,7 +11,7 @@ require (
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/osquery/osquery-go v0.0.0-20240910233439-561a72587be6
 	github.com/spf13/viper v1.19.0
-	github.com/wailsapp/wails/v2 v2.9.1
+	github.com/wailsapp/wails/v2 v2.9.2
 )
 
 require (
@@ -55,7 +55,7 @@ require (
 	github.com/tkrajina/go-reflector v0.5.8 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	github.com/wailsapp/go-webview2 v1.0.15 // indirect
+	github.com/wailsapp/go-webview2 v1.0.16 // indirect
 	github.com/wailsapp/mimetype v1.4.1 // indirect
 	go.opentelemetry.io/otel v1.30.0 // indirect
 	go.opentelemetry.io/otel/metric v1.30.0 // indirect
