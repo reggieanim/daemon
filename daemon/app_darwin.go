@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -48,12 +47,19 @@ func (a *App) startup(ctx context.Context) {
 	if err != nil {
 		a.logger.Println("Could not connect to osquery")
 	}
-	go a.workerThread()
-	go a.timerThread()
+	go a.startHTTPServer()
 }
 
 func (a *App) workerThread() {
-	a.logger.Println("Worker thread started")
+	a.logger.Println("Timer thread started")
+	var frequency int
+	if a.config.CheckFrequency == 0 {
+		frequency = 1
+	} else {
+		frequency = a.config.CheckFrequency
+	}
+	ticker := time.NewTicker(time.Duration(frequency) * time.Second)
+	defer ticker.Stop()
 	for {
 		select {
 		case cmdStr := <-a.workerQueue:
@@ -97,7 +103,13 @@ func (a *App) StopService() (string, error) {
 }
 
 func (a *App) timerThread() {
-	ticker := time.NewTicker(time.Duration(a.config.CheckFrequency) * time.Second)
+	var frequency int
+	if a.config.CheckFrequency == 0 {
+		frequency = 1
+	} else {
+		frequency = a.config.CheckFrequency
+	}
+	ticker := time.NewTicker(time.Duration(frequency) * time.Second)
 	defer ticker.Stop()
 	a.logger.Println("Timer thread started")
 

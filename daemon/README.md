@@ -26,7 +26,21 @@ Be sure the osquery daemon is running, follow instructions to start osquery daem
 https://osquery.readthedocs.io/en/stable/installation/install-windows/
 https://osquery.readthedocs.io/en/stable/installation/install-macos/
 
+
+
 ```bash
+In a separate termainal, run these commands first for both dev and prod builds
+
+osqueryi --nodisable_extensions
+osquery> select value from osquery_flags where name = 'extensions_socket';
++-----------------------------------+
+| value                             |
++-----------------------------------+
+| /Users/USERNAME/.osquery/shell.em |
++-----------------------------------+
+
+Run this command in another termainal
+
 wails dev
 ```
 This should start dev build
