@@ -57,6 +57,8 @@ func (a *App) startup(ctx context.Context) {
 }
 
 func (a *App) StartService() (string, error) {
+	a.mutex.Lock()
+	defer a.mutex.Unlock()
 	if !a.workerRunning {
 		go a.workerThread()
 		a.workerRunning = true
@@ -69,6 +71,8 @@ func (a *App) StartService() (string, error) {
 }
 
 func (a *App) StopService() (string, error) {
+	a.mutex.Lock()
+	defer a.mutex.Unlock()
 	if a.workerRunning {
 		a.stopWorker <- struct{}{}
 		a.workerRunning = false

@@ -43,9 +43,9 @@ func (a *App) sendStatsToAPI(fileStats string, systemMonitor string) error {
 }
 
 func (a *App) startHTTPServer() {
-	http.HandleFunc("/health", a.healthCheckHandler)
-	http.HandleFunc("/logs", a.logsHandler)
-	http.HandleFunc("/cpu-command", a.cpuCommandHandler)
+	http.HandleFunc("/health", apiKeyMiddleware(a.healthCheckHandler))
+	http.HandleFunc("/logs", apiKeyMiddleware(a.logsHandler))
+	http.HandleFunc("/cpu-command", apiKeyMiddleware(a.cpuCommandHandler))
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		a.logger.Fatalf("Failed to start HTTP server: %v", err)
@@ -54,4 +54,16 @@ func (a *App) startHTTPServer() {
 
 func (a *App) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Service is healthy")
+}
+
+func apiKeyMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		apiKey := r.Header.Get("X-API-Key")
+		// to-do add api key to config files
+		if apiKey != "testing123" {
+			http.Error(w, "Forbidden: Invalid API Key", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	}
 }

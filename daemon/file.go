@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -74,7 +75,9 @@ func (a *App) saveStatsToFile(fileStats string, systemStats string) error {
 	a.mutex.Lock()
 	defer a.mutex.Unlock()
 
-	file, err := os.OpenFile("stats.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	logFilePath := filepath.Join(".", "stats.log")
+	file, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
 	if err != nil {
 		return fmt.Errorf("failed to open stats log file: %w", err)
 	}

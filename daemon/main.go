@@ -1,9 +1,10 @@
 package main
 
 import (
-	_ "embed"
-
 	"embed"
+	_ "embed"
+	"net/http"
+	_ "net/http/pprof"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -16,7 +17,14 @@ var assets embed.FS
 //go:embed frontend/src/assets/images/logo-universal.png
 var wailsIcon []byte
 
+func startProfiler() {
+	go func() {
+		http.ListenAndServe("localhost:6060", nil)
+	}()
+}
+
 func main() {
+	startProfiler()
 	app := NewApp()
 
 	err := wails.Run(&options.App{

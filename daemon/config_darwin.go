@@ -17,7 +17,7 @@ type Config struct {
 }
 
 func (a *App) loadConfig(ctx context.Context) error {
-	configPath, err := runtime.SaveFileDialog(ctx, runtime.SaveDialogOptions{
+	configPath, err := a.dialog.SaveFileDialog(ctx, runtime.SaveDialogOptions{
 		DefaultFilename: "config.yaml",
 		Title:           "Choose config file location",
 	})
@@ -29,7 +29,7 @@ func (a *App) loadConfig(ctx context.Context) error {
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		a.logger.Printf("Config file does not exist, creating default config at: %s", configPath)
-		monitorDir, err := runtime.OpenDirectoryDialog(ctx, runtime.OpenDialogOptions{
+		monitorDir, err := a.dialog.OpenDirectoryDialog(ctx, runtime.OpenDialogOptions{
 			Title: "Select directory to monitor",
 		})
 		if err != nil {

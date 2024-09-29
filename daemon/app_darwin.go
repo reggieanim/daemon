@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"daemon/client"
+	"daemon/commands"
+	"daemon/dialog"
 	"log"
 	"os"
 	"os/exec"
@@ -15,10 +18,13 @@ type App struct {
 	ctx               context.Context
 	config            Config
 	logger            *log.Logger
+	logDir            string
+	client            client.Client
 	osquerySocketPath string
 	osqueryInstance   *osquery.ExtensionManagerServer
 	workerQueue       chan string
 	timerLogs         []string
+	dialog            dialog.Dialog
 	mutex             sync.Mutex
 
 	stopWorker    chan struct{}
@@ -34,6 +40,7 @@ func NewApp() *App {
 		logger:      log.New(os.Stdout, "AppLogger: ", log.LstdFlags),
 		stopWorker:  make(chan struct{}),
 		stopTimer:   make(chan struct{}),
+		dialog:      &dialog.WailsDialog{},
 	}
 }
 
@@ -51,19 +58,25 @@ func (a *App) startup(ctx context.Context) {
 }
 
 func (a *App) workerThread() {
-	a.logger.Println("Timer thread started")
+	a.logger.Println("Worker thread started")
 	var frequency int
 	if a.config.CheckFrequency == 0 {
 		frequency = 1
 	} else {
 		frequency = a.config.CheckFrequency
 	}
+	whitelist := commands.GetWhitelist()
 	ticker := time.NewTicker(time.Duration(frequency) * time.Second)
 	defer ticker.Stop()
 	for {
 		select {
 		case cmdStr := <-a.workerQueue:
-			a.logger.Printf("Executing command: %s", cmdStr)
+			a.logger.Printf("Received command: %s", cmdStr)
+
+			if _, allowed := whitelist[cmdStr]; !allowed {
+				a.logger.Printf("Command not allowed: %s", cmdStr)
+				continue
+			}
 			cmd := exec.Command("sh", "-c", cmdStr)
 			output, err := cmd.CombinedOutput()
 			if err != nil {

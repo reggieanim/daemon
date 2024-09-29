@@ -1,23 +1,14 @@
 package main
 
 import (
+	"log"
 	"os"
-	"os/exec"
 	"testing"
 )
 
-// Mocking the exec.Command function
-func mockExecCommand(command string, args ...string) *exec.Cmd {
-	// Simulate a successful command execution
-	cs := []string{"-test.run=TestMockHelperProcess", "--", command}
-	cs = append(cs, args...)
-	cmd := exec.Command(os.Args[0], cs...)
-	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
-	return cmd
-}
-
 func TestApp_StartService(t *testing.T) {
 	app := NewApp()
+	app.logger = log.New(os.Stdout, "TestLogger: ", log.LstdFlags)
 
 	msg, err := app.StartService()
 	if err != nil {
@@ -38,6 +29,7 @@ func TestApp_StartService(t *testing.T) {
 
 func TestApp_StopService(t *testing.T) {
 	app := NewApp()
+	app.logger = log.New(os.Stdout, "TestLogger: ", log.LstdFlags)
 	_, err := app.StartService()
 	if err != nil {
 		t.Fatalf("Failed to start service: %v", err)
