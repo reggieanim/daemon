@@ -1,14 +1,19 @@
-package main
+package tray
 
 import (
 	"context"
+	_ "embed"
 	"os"
 
 	"github.com/energye/systray"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func createSystemTray(ctx context.Context) func() {
+//go:embed logo-universal.png
+
+var wailsIcon []byte
+
+func CreateSystemTray(ctx context.Context) func() {
 
 	return func() {
 		systray.SetIcon(wailsIcon)

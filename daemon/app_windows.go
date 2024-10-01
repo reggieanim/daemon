@@ -1,149 +1,202 @@
 package main
 
-import (
-	"context"
-	"log"
-	"os"
-	"os/exec"
-	"sync"
-	"time"
+// import (
+// 	"bytes"
+// 	"context"
+// 	"daemon/internal/file"
+// 	"daemon/internal/monitor"
+// 	"daemon/internal/query"
+// 	"daemon/internal/tray"
+// 	"encoding/json"
+// 	"fmt"
+// 	"log"
+// 	"net/http"
+// 	"os"
+// 	"os/exec"
+// 	"sync"
+// 	"time"
 
-	"github.com/energye/systray"
-	"github.com/osquery/osquery-go"
-)
+// 	"github.com/energye/systray"
+// )
 
-type App struct {
-	ctx               context.Context
-	config            Config
-	logger            *log.Logger
-	osquerySocketPath string
-	osqueryInstance   *osquery.ExtensionManagerServer
-	workerQueue       chan string
-	timerLogs         []string
-	mutex             sync.Mutex
+// type App struct {
+// 	ctx         context.Context
+// 	config      Config
+// 	logger      *log.Logger
+// 	osquery     query.Osquery
+// 	workerQueue chan string
+// 	timerLogs   []string
+// 	mutex       sync.Mutex
 
-	stopWorker    chan struct{}
-	stopTimer     chan struct{}
-	workerRunning bool
-	timerRunning  bool
-}
+// 	stopWorker    chan struct{}
+// 	stopTimer     chan struct{}
+// 	workerRunning bool
+// 	timerRunning  bool
+// }
 
-func NewApp() *App {
-	return &App{
-		workerQueue: make(chan string, 100),
-		timerLogs:   []string{},
-		logger:      log.New(os.Stdout, "AppLogger: ", log.LstdFlags),
-		stopWorker:  make(chan struct{}),
-		stopTimer:   make(chan struct{}),
-	}
-}
+// func NewApp() *App {
+// 	return &App{
+// 		workerQueue: make(chan string, 100),
+// 		timerLogs:   []string{},
+// 		logger:      log.New(os.Stdout, "AppLogger: ", log.LstdFlags),
+// 		stopWorker:  make(chan struct{}),
+// 		stopTimer:   make(chan struct{}),
+// 	}
+// }
 
-func (a *App) startup(ctx context.Context) {
-	a.ctx = ctx
-	err := a.loadConfig(ctx)
-	if err != nil {
-		a.logger.Println("Could not load config:", err)
-	} else {
-		a.logger.Println("Config loaded:", a.config)
-	}
+// func (a *App) startup(ctx context.Context) {
+// 	a.ctx = ctx
+// 	err := a.loadConfig(ctx)
+// 	if err != nil {
+// 		a.logger.Println("Could not load config:", err)
+// 	} else {
+// 		a.logger.Println("Config loaded:", a.config)
+// 	}
 
-	err = a.initOsquery()
-	if err != nil {
-		a.logger.Println("Could not connect to osquery:", err)
-	}
+// 	err = a.osquery.InitOsquery()
+// 	if err != nil {
+// 		a.logger.Println("Could not connect to osquery:", err)
+// 	}
 
-	go a.startHTTPServer()
-	systray.Run(createSystemTray(ctx), func() {})
-}
+// 	systray.Run(tray.CreateSystemTray(ctx), func() {})
+// }
 
-func (a *App) StartService() (string, error) {
-	a.mutex.Lock()
-	defer a.mutex.Unlock()
-	if !a.workerRunning {
-		go a.workerThread()
-		a.workerRunning = true
-	}
-	if !a.timerRunning {
-		go a.timerThread()
-		a.timerRunning = true
-	}
-	return "Service started", nil
-}
+// func (a *App) StartService() (string, error) {
+// 	a.mutex.Lock()
+// 	defer a.mutex.Unlock()
+// 	if !a.workerRunning {
+// 		go a.workerThread()
+// 		a.workerRunning = true
+// 	}
+// 	if !a.timerRunning {
+// 		go a.timerThread()
+// 		a.timerRunning = true
+// 	}
+// 	return "Service started", nil
+// }
 
-func (a *App) StopService() (string, error) {
-	a.mutex.Lock()
-	defer a.mutex.Unlock()
-	if a.workerRunning {
-		a.stopWorker <- struct{}{}
-		a.workerRunning = false
-	}
-	if a.timerRunning {
-		a.stopTimer <- struct{}{}
-		a.timerRunning = false
-	}
-	return "Service stopped", nil
-}
+// func (a *App) StopService() (string, error) {
+// 	a.mutex.Lock()
+// 	defer a.mutex.Unlock()
+// 	if a.workerRunning {
+// 		a.stopWorker <- struct{}{}
+// 		a.workerRunning = false
+// 	}
+// 	if a.timerRunning {
+// 		a.stopTimer <- struct{}{}
+// 		a.timerRunning = false
+// 	}
+// 	return "Service stopped", nil
+// }
 
-func (a *App) workerThread() {
-	a.logger.Println("Worker thread started")
-	for {
-		select {
-		case cmdStr := <-a.workerQueue:
-			a.logger.Printf("Executing command: %s", cmdStr)
-			cmd := exec.Command("cmd", "/C", cmdStr)
-			output, err := cmd.CombinedOutput()
-			if err != nil {
-				a.logger.Printf("Error executing command: %v, output: %s", err, output)
-				continue
-			}
-			a.logger.Printf("Command output: %s", output)
-		case <-a.stopWorker:
-			a.logger.Println("Worker thread stopped")
-			return
-		}
-	}
-}
+// func (a *App) workerThread() {
+// 	a.logger.Println("Worker thread started")
+// 	for {
+// 		select {
+// 		case cmdStr := <-a.workerQueue:
+// 			a.logger.Printf("Executing command: %s", cmdStr)
+// 			cmd := exec.Command("cmd", "/C", cmdStr)
+// 			output, err := cmd.CombinedOutput()
+// 			if err != nil {
+// 				a.logger.Printf("Error executing command: %v, output: %s", err, output)
+// 				continue
+// 			}
+// 			a.logger.Printf("Command output: %s", output)
+// 		case <-a.stopWorker:
+// 			a.logger.Println("Worker thread stopped")
+// 			return
+// 		}
+// 	}
+// }
 
-func (a *App) timerThread() {
-	var frequency int
-	if a.config.CheckFrequency == 0 {
-		frequency = 1
-	} else {
-		frequency = a.config.CheckFrequency
-	}
-	ticker := time.NewTicker(time.Duration(frequency) * time.Second)
-	defer ticker.Stop()
-	a.logger.Println("Timer thread started")
+// func (a *App) timerThread() {
+// 	var frequency int
+// 	m := monitor.Monitor{
+// 		a.osquery.OsqueryInstance,
+// 		a.osquery.OsquerySocketPath,
+// 		a.config.MonitorDirectory,
+// 	}
 
-	for {
-		select {
-		case <-ticker.C:
-			stats, err := a.getFileModificationStats()
-			if err != nil {
-				a.logger.Printf("Error getting file modification stats: %v", err)
-				continue
-			}
+// 	f := file.File{
+// 		a.osquery.OsqueryInstance,
+// 		a.osquery.OsquerySocketPath,
+// 		a.config.MonitorDirectory,
+// 		a.mutex,
+// 	}
 
-			systemStats, err := a.getSystemMonitoringData()
-			if err != nil {
-				a.logger.Printf("Error getting system monitoring data: %v", err)
-				continue
-			}
+// 	if a.config.CheckFrequency == 0 {
+// 		frequency = 1
+// 	} else {
+// 		frequency = a.config.CheckFrequency
+// 	}
+// 	ticker := time.NewTicker(time.Duration(frequency) * time.Second)
+// 	defer ticker.Stop()
+// 	a.logger.Println("Timer thread started")
 
-			a.mutex.Lock()
-			a.timerLogs = append(a.timerLogs, stats)
-			a.mutex.Unlock()
+// 	for {
+// 		select {
+// 		case <-ticker.C:
+// 			stats, err := f.GetFileModificationStats()
+// 			if err != nil {
+// 				a.logger.Printf("Error getting file modification stats: %v", err)
+// 				continue
+// 			}
 
-			if err := a.saveStatsToFile(stats, systemStats); err != nil {
-				a.logger.Printf("Error saving stats to file: %v", err)
-			}
+// 			systemStats, err := m.GetSystemMonitoringData()
+// 			if err != nil {
+// 				a.logger.Printf("Error getting system monitoring data: %v", err)
+// 				continue
+// 			}
 
-			if err := a.sendStatsToAPI(stats, systemStats); err != nil {
-				a.logger.Printf("Error sending stats to API: %v", err)
-			}
-		case <-a.stopTimer:
-			a.logger.Println("Timer thread stopped")
-			return
-		}
-	}
-}
+// 			a.mutex.Lock()
+// 			a.timerLogs = append(a.timerLogs, stats)
+// 			a.mutex.Unlock()
+
+// 			if err := f.SaveStatsToFile(stats, systemStats); err != nil {
+// 				a.logger.Printf("Error saving stats to file: %v", err)
+// 			}
+
+// 			if err := a.sendStatsToAPI(stats, systemStats); err != nil {
+// 				a.logger.Printf("Error sending stats to API: %v", err)
+// 			}
+// 		case <-a.stopTimer:
+// 			a.logger.Println("Timer thread stopped")
+// 			return
+// 		}
+// 	}
+// }
+
+// func (a *App) sendStatsToAPI(fileStats string, systemMonitor string) error {
+// 	payload := map[string]string{
+// 		"file_stats":     fileStats,
+// 		"system_monitor": systemMonitor,
+// 	}
+
+// 	data, err := json.Marshal(payload)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to marshal stats to JSON: %w", err)
+// 	}
+
+// 	apiEndpoint := a.config.APIEndpoint
+
+// 	req, err := http.NewRequest("POST", apiEndpoint, bytes.NewBuffer(data))
+// 	if err != nil {
+// 		return fmt.Errorf("failed to create HTTP request: %w", err)
+// 	}
+
+// 	req.Header.Set("Content-Type", "application/json")
+
+// 	client := &http.Client{}
+// 	resp, err := client.Do(req)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to send stats to API: %w", err)
+// 	}
+// 	defer resp.Body.Close()
+
+// 	if resp.StatusCode != http.StatusOK {
+// 		return fmt.Errorf("API responded with status: %s", resp.Status)
+// 	}
+
+// 	a.logger.Println("Successfully sent stats to API")
+// 	return nil
+// }

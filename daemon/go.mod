@@ -9,6 +9,7 @@ toolchain go1.23.1
 require (
 	github.com/energye/systray v1.0.2
 	github.com/go-playground/validator v9.31.0+incompatible
+	github.com/julienschmidt/httprouter v1.3.0
 	github.com/osquery/osquery-go v0.0.0-20240910233439-561a72587be6
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0

@@ -1,11 +1,13 @@
-package main
+package file
 
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/osquery/osquery-go"
@@ -17,18 +19,25 @@ type FileInfo struct {
 	Size         int64  `json:"size"`
 }
 
-func (a *App) getFileModificationStats() (string, error) {
-	if a.osqueryInstance == nil {
+type File struct {
+	OsqueryInstance   *osquery.ExtensionManagerServer
+	OsquerySocketPath string
+	MonitorDirectory  string
+	Mutex             sync.Mutex
+}
+
+func (a *File) GetFileModificationStats() (string, error) {
+	if a.OsqueryInstance == nil {
 		return "", fmt.Errorf("osquery instance not initialized")
 	}
 
-	client, err := osquery.NewClient(a.osquerySocketPath, 10*time.Second)
+	client, err := osquery.NewClient(a.OsquerySocketPath, 10*time.Second)
 	if err != nil {
 		return "", fmt.Errorf("failed to create osquery client: %w", err)
 	}
 	defer client.Close()
 
-	query := fmt.Sprintf("SELECT path, mtime, size FROM file WHERE directory = '%s' ORDER BY mtime DESC", a.config.MonitorDirectory)
+	query := fmt.Sprintf("SELECT path, mtime, size FROM file WHERE directory = '%s' ORDER BY mtime DESC", a.MonitorDirectory)
 	response, err := client.Query(query)
 	if err != nil {
 		return "", fmt.Errorf("failed to execute osquery query: %w", err)
@@ -59,21 +68,21 @@ func (a *App) getFileModificationStats() (string, error) {
 		return "", fmt.Errorf("failed to marshal file info to JSON: %w", err)
 	}
 
-	a.logger.Println("Updated files stats")
+	log.Println("Updated files stats")
 	return string(jsonData), nil
 }
 
-func (a *App) GetLatestFileModifications() string {
-	stats, err := a.getFileModificationStats()
+func (a *File) GetLatestFileModifications() string {
+	stats, err := a.GetFileModificationStats()
 	if err != nil {
 		return fmt.Sprintf("Error getting file modification stats: %v", err)
 	}
 	return stats
 }
 
-func (a *App) saveStatsToFile(fileStats string, systemStats string) error {
-	a.mutex.Lock()
-	defer a.mutex.Unlock()
+func (a *File) SaveStatsToFile(fileStats string, systemStats string) error {
+	a.Mutex.Lock()
+	defer a.Mutex.Unlock()
 
 	logFilePath := filepath.Join(".", "stats.log")
 	file, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -88,6 +97,6 @@ func (a *App) saveStatsToFile(fileStats string, systemStats string) error {
 		return fmt.Errorf("failed to write stats to file: %w", err)
 	}
 
-	a.logger.Println("Successfully saved stats to file")
+	log.Println("Successfully saved stats to file")
 	return nil
 }

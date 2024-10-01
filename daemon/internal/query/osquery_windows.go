@@ -1,6 +1,7 @@
-package main
+package query
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -8,20 +9,26 @@ import (
 	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func (a *App) initOsquery() error {
+type Osquery struct {
+	OsquerySocketPath string
+	OsqueryInstance   *osquery.ExtensionManagerServer
+	ctx               context.Context
+}
+
+func (a *Osquery) InitOsquery() error {
 	namedPipePath, err := a.discoverOsqueryPipe()
 	if err != nil {
 		return fmt.Errorf("failed to discover osquery named pipe: %w", err)
 	}
 
-	a.osquerySocketPath = namedPipePath
+	a.OsquerySocketPath = namedPipePath
 
 	server, err := osquery.NewExtensionManagerServer("file_monitor", namedPipePath)
 	if err != nil {
 		return fmt.Errorf("failed to create osquery extension: %w", err)
 	}
 
-	a.osqueryInstance = server
+	a.OsqueryInstance = server
 
 	go func() {
 		if err := server.Run(); err != nil {
@@ -32,7 +39,7 @@ func (a *App) initOsquery() error {
 	return nil
 }
 
-func (a *App) discoverOsqueryPipe() (string, error) {
+func (a *Osquery) discoverOsqueryPipe() (string, error) {
 	namedPipe := `\\.\pipe\osquery.em`
 
 	if _, err := os.Stat(namedPipe); err == nil {
@@ -42,18 +49,18 @@ func (a *App) discoverOsqueryPipe() (string, error) {
 	return "", fmt.Errorf("could not find osquery named pipe at %s", namedPipe)
 }
 
-func (a *App) GetOsqueryStatus() string {
-	if a.osquerySocketPath == "" {
+func (a *Osquery) GetOsqueryStatus() string {
+	if a.OsquerySocketPath == "" {
 		return "Osquery named pipe not set. Has initOsquery been called?"
 	}
 
-	if _, err := os.Stat(a.osquerySocketPath); os.IsNotExist(err) {
-		return fmt.Sprintf("Osquery named pipe not found at %s. Is osqueryd running?", a.osquerySocketPath)
+	if _, err := os.Stat(a.OsquerySocketPath); os.IsNotExist(err) {
+		return fmt.Sprintf("Osquery named pipe not found at %s. Is osqueryd running?", a.OsquerySocketPath)
 	}
 
-	if a.osqueryInstance == nil {
+	if a.OsqueryInstance == nil {
 		return "Osquery named pipe found, but extension is not initialized"
 	}
 
-	return fmt.Sprintf("Osquery is running and extension is initialized. Pipe: %s", a.osquerySocketPath)
+	return fmt.Sprintf("Osquery is running and extension is initialized. Pipe: %s", a.OsquerySocketPath)
 }

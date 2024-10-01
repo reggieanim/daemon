@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 )
 
-func (a *App) logsHandler(w http.ResponseWriter, r *http.Request) {
+func (a *serverApplication) logsHandler(w http.ResponseWriter, r *http.Request) {
 	if a.logDir == "" {
 		a.logDir = "."
 	}

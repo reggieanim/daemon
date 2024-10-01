@@ -1,12 +1,19 @@
-package main
+package monitor
 
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/osquery/osquery-go"
 )
+
+type Monitor struct {
+	OsqueryInstance   *osquery.ExtensionManagerServer
+	OsquerySocketPath string
+	MonitorDirectory  string
+}
 
 type SystemStats struct {
 	CPUUsage     string `json:"cpu_usage"`
@@ -15,12 +22,12 @@ type SystemStats struct {
 	SystemUptime string `json:"system_uptime"`
 }
 
-func (a *App) getSystemMonitoringData() (string, error) {
-	if a.osqueryInstance == nil {
+func (a *Monitor) GetSystemMonitoringData() (string, error) {
+	if a.OsqueryInstance == nil {
 		return "", fmt.Errorf("osquery instance not initialized")
 	}
 
-	client, err := osquery.NewClient(a.osquerySocketPath, 10*time.Second)
+	client, err := osquery.NewClient(a.OsquerySocketPath, 10*time.Second)
 	if err != nil {
 		return "", fmt.Errorf("failed to create osquery client: %w", err)
 	}
@@ -49,7 +56,7 @@ func (a *App) getSystemMonitoringData() (string, error) {
 		memoryUsage = memoryResponse.Response[0]["memory_usage"]
 	}
 
-	diskQuery := fmt.Sprintf("SELECT (blocks_available * 100.0) / blocks_size AS disk_usage FROM mounts WHERE path = '%s'", a.config.MonitorDirectory)
+	diskQuery := fmt.Sprintf("SELECT (blocks_available * 100.0) / blocks_size AS disk_usage FROM mounts WHERE path = '%s'", a.MonitorDirectory)
 	diskResponse, err := client.Query(diskQuery)
 	if err != nil {
 		return "", fmt.Errorf("failed to query disk usage: %w", err)
@@ -83,6 +90,6 @@ func (a *App) getSystemMonitoringData() (string, error) {
 		return "", fmt.Errorf("failed to marshal system stats to JSON: %w", err)
 	}
 
-	a.logger.Println("Updated system stats")
+	log.Println("Updated system stats")
 	return string(jsonData), nil
 }
