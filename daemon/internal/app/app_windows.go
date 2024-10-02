@@ -3,6 +3,7 @@ package app
 import (
 	"bytes"
 	"context"
+	"daemon/commands"
 	"daemon/internal/file"
 	"daemon/internal/monitor"
 	"daemon/internal/query"
@@ -27,6 +28,7 @@ type App struct {
 	WorkerQueue chan string
 	timerLogs   []string
 	mutex       sync.Mutex
+	Server      *http.Server
 
 	stopWorker    chan struct{}
 	stopTimer     chan struct{}
@@ -58,6 +60,9 @@ func (a *App) Startup(ctx context.Context) {
 		a.logger.Println("Could not connect to osquery:", err)
 	}
 
+	a.logger.Printf("starting server on %s", a.Server.Addr)
+	err = a.Server.ListenAndServe()
+	a.logger.Fatal(err)
 	systray.Run(tray.CreateSystemTray(ctx), func() {})
 }
 
@@ -91,11 +96,25 @@ func (a *App) StopService() (string, error) {
 
 func (a *App) workerThread() {
 	a.logger.Println("Worker thread started")
+	var frequency int
+	if a.config.CheckFrequency == 0 {
+		frequency = 1
+	} else {
+		frequency = a.config.CheckFrequency
+	}
+	whitelist := commands.GetWhitelist()
+	ticker := time.NewTicker(time.Duration(frequency) * time.Second)
+	defer ticker.Stop()
 	for {
 		select {
 		case cmdStr := <-a.WorkerQueue:
 			a.logger.Printf("Executing command: %s", cmdStr)
 			cmd := exec.Command("cmd", "/C", cmdStr)
+
+			if _, allowed := whitelist[cmdStr]; !allowed {
+				a.logger.Printf("Command not allowed: %s", cmdStr)
+				continue
+			}
 			output, err := cmd.CombinedOutput()
 			if err != nil {
 				a.logger.Printf("Error executing command: %v, output: %s", err, output)
