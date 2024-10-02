@@ -41,6 +41,7 @@ osquery> select value from osquery_flags where name = 'extensions_socket';
 
 Run this command in another termainal
 
+cd cmd/api
 wails dev
 ```
 This should start dev build
@@ -49,6 +50,41 @@ This should start dev build
 ### To build
 
 ```bash
+cd cmd/api
 wails build
 ```
+
+### Profiling the application
+
+This application includes Go's built-in profiling tool pprof to measure performance and identify bottlenecks.
+
+## Running the Application with Profiling
+The application is already set up with the necessary code to expose the pprof profiling interface.
+Once you run the application, the profiling server will be available on localhost:6060.
+
+## Collect CPU profile by running this command (profile duration is typically 30 seconds):
+
+```bash
+go tool pprof http://localhost:6060/debug/pprof/profile?seconds=30
+```
+Once the profile is downloaded, you can analyze it with pprof:
+
+```bash
+go tool pprof cpu.prof
+```
+
+To visualize the profile, generate a graph (requires Graphviz to be installed):
+```bash
+go tool pprof -svg cpu.prof > cpu_profile.svg
+```
+
+## Further Profiling Options
+You can also profile goroutines, threads, and blocking events:
+
+Goroutine profile: http://localhost:6060/debug/pprof/goroutine
+Thread profile: http://localhost:6060/debug/pprof/threadcreate
+Blocking profile: http://localhost:6060/debug/pprof/block
+
+Refer to Go pprof docs
+
 
