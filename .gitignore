@@ -1,4 +1,6 @@
 build/bin
 node_modules
 frontend/dist
+cmd/api/frontend/dist
+cmd/api/stats.log
 config.yaml
