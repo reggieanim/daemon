@@ -42,7 +42,6 @@ func main() {
 		logger: logger,
 		app:    app,
 	}
-
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.port),
 		Handler:      srvApp.routes(),
@@ -50,6 +49,7 @@ func main() {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
+	app.Server = srv
 
 	err := wails.Run(&options.App{
 		Title:             "daemon",
@@ -70,10 +70,4 @@ func main() {
 		println("Error:", err.Error())
 	}
 
-	// Start the HTTP server.
-	logger.Printf("starting %s server on %s", cfg.env, srv.Addr)
-	go func() {
-		err = srv.ListenAndServe()
-		logger.Fatal(err)
-	}()
 }

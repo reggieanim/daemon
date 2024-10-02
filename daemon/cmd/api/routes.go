@@ -11,6 +11,7 @@ func (app *serverApplication) routes() *httprouter.Router {
 
 	router.HandlerFunc(http.MethodGet, "/v1/health", apiKeyMiddleware(app.healthCheckHandler))
 	router.HandlerFunc(http.MethodGet, "/v1/stats", apiKeyMiddleware(app.logsHandler))
+	router.HandlerFunc(http.MethodPost, "/v1/command", apiKeyMiddleware(app.cpuCommandHandler))
 	return router
 }
 
