@@ -41,6 +41,7 @@ osquery> select value from osquery_flags where name = 'extensions_socket';
 
 Run this command in another termainal
 
+cd cmd/api
 wails dev
 ```
 This should start dev build
@@ -49,6 +50,7 @@ This should start dev build
 ### To build
 
 ```bash
+cd cmd/api
 wails build
 ```
 

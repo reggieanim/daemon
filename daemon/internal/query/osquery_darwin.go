@@ -1,4 +1,4 @@
-package osquery
+package query
 
 import (
 	"context"
@@ -12,25 +12,25 @@ import (
 )
 
 type Osquery struct {
-	osquerySocketPath string
-	osqueryInstance   *osquery.ExtensionManagerServer
+	OsquerySocketPath string
+	OsqueryInstance   *osquery.ExtensionManagerServer
 	ctx               context.Context
 }
 
-func (a *Osquery) initOsquery() error {
+func (a *Osquery) InitOsquery() error {
 	socketPath, err := a.discoverOsquerySocket()
 	if err != nil {
 		return fmt.Errorf("failed to discover osquery socket: %w", err)
 	}
 
-	a.osquerySocketPath = socketPath
+	a.OsquerySocketPath = socketPath
 
 	server, err := osquery.NewExtensionManagerServer("file_monitor", socketPath)
 	if err != nil {
 		return fmt.Errorf("failed to create osquery extension: %w", err)
 	}
 
-	a.osqueryInstance = server
+	a.OsqueryInstance = server
 
 	go func() {
 		if err := server.Run(); err != nil {
@@ -71,17 +71,17 @@ func (a *Osquery) discoverOsquerySocket() (string, error) {
 }
 
 func (a *Osquery) GetOsqueryStatus() string {
-	if a.osquerySocketPath == "" {
+	if a.OsquerySocketPath == "" {
 		return "Osquery socket path not set. Has initOsquery been called?"
 	}
 
-	if _, err := os.Stat(a.osquerySocketPath); os.IsNotExist(err) {
-		return fmt.Sprintf("Osquery socket not found at %s. Is osqueryd running?", a.osquerySocketPath)
+	if _, err := os.Stat(a.OsquerySocketPath); os.IsNotExist(err) {
+		return fmt.Sprintf("Osquery socket not found at %s. Is osqueryd running?", a.OsquerySocketPath)
 	}
 
-	if a.osqueryInstance == nil {
+	if a.OsqueryInstance == nil {
 		return "Osquery socket found, but extension is not initialized"
 	}
 
-	return fmt.Sprintf("Osquery is running and extension is initialized. Socket: %s", a.osquerySocketPath)
+	return fmt.Sprintf("Osquery is running and extension is initialized. Socket: %s", a.OsquerySocketPath)
 }
