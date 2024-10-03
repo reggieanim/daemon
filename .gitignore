@@ -1,4 +1,5 @@
 build/bin
+cmd/api/build/bin
 node_modules
 frontend/dist
 cmd/api/frontend/dist
