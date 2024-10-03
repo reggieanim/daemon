@@ -42,3 +42,9 @@ run-windows-dev:
 build:
 	@echo "Building the Wails project"
 	cd $(CMD_DIR) && wails build
+
+
+.PHONY: build-nsis
+build-nsis:
+	@echo "Building the Wails project"
+	cd $(CMD_DIR) && wails build -nsis

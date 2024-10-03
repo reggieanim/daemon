@@ -10,6 +10,7 @@ Before you can run the application, ensure you have the following installed:
 - [Node.js](https://nodejs.org/) (version 14 or higher)
 - [Wails CLI](https://wails.io/docs/gettingstarted/installation) (Follow the Wails installation instructions)
 - [osquery](https://osquery.io/) (for system monitoring integration)
+- [GNU Make](https://www.gnu.org/software/make/) (use choco or brew to install make)
 
 
 ### Install Wails CLI
@@ -50,12 +51,19 @@ make run-windows-dev
 ```
 
 
-### To build
-
+### To build exectutable on WINDOWS AND MAC
+For security reasons the user must compile the application on their own
 ```bash
-cd cmd/api
-wails build
+make build
 ```
+The package will then be in the build bin folder. Click to run the application
+
+
+### To build WINDOWS msi installer
+```bash
+make build-nsis
+```
+The package will then be in the build bin folder, run the msi installer and then follow the instructions.
 
 ### Profiling the application
 
