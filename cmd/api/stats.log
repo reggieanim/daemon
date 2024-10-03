@@ -1779,3 +1779,36 @@ System Stats: {
   "disk_usage": "Unknown",
   "system_uptime": "8086"
 }
+File Stats: [
+  {
+    "path": "/Users/animr/Documents/assignement 3/config.yaml",
+    "mtime": "2024-09-11T14:45:37-04:00",
+    "size": 129
+  },
+  {
+    "path": "/Users/animr/Documents/assignement 3/.DS_Store",
+    "mtime": "2024-06-04T16:29:53-04:00",
+    "size": 6148
+  },
+  {
+    "path": "/Users/animr/Documents/assignement 3/Reginald_Anim_Assignment3_COSC 4426.pdf",
+    "mtime": "2024-06-03T17:35:56-04:00",
+    "size": 287024
+  },
+  {
+    "path": "/Users/animr/Documents/assignement 3/Reginald_Anim_Assignment3_COSC 4426.docx",
+    "mtime": "2024-06-01T21:51:41-04:00",
+    "size": 367722
+  },
+  {
+    "path": "/Users/animr/Documents/assignement 3/Assignment 3 COSC 4436.fzz",
+    "mtime": "2024-06-01T19:19:30-04:00",
+    "size": 7194
+  }
+]
+System Stats: {
+  "cpu_usage": "Unknown",
+  "memory_usage": "Unknown",
+  "disk_usage": "Unknown",
+  "system_uptime": "962403"
+}
