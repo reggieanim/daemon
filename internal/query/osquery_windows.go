@@ -40,7 +40,7 @@ func (a *Osquery) InitOsquery() error {
 }
 
 func (a *Osquery) discoverOsqueryPipe() (string, error) {
-	namedPipe := `\\.\pipe\osquery.em`
+	namedPipe := `\\.\pipe\shell.em`
 
 	if _, err := os.Stat(namedPipe); err == nil {
 		return namedPipe, nil

@@ -35,6 +35,10 @@ run-mac-dev:
 run-windows-dev:
 	@echo "Starting osqueryd"
 	@echo "Make sure osqueryd is running before starting the dev server."
+	@echo "Run the following command in a separate terminal to start osquery:"
+	@echo "osqueryi --nodisable_extensions"
+	@echo "osquery> select value from osquery_flags where name = 'extensions_socket';"
+	@echo "Ensure the socket path matches: | \\.\pipe\shell.em |"
 	cd $(CMD_DIR) && wails dev
 
 # Build target
