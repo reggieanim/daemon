@@ -24,6 +24,7 @@ type File struct {
 	OsquerySocketPath string
 	MonitorDirectory  string
 	Mutex             sync.Mutex
+	Logger            *log.Logger
 }
 
 func (a *File) GetFileModificationStats() (string, error) {
@@ -83,10 +84,16 @@ func (a *File) GetLatestFileModifications() string {
 func (a *File) SaveStatsToFile(fileStats string, systemStats string) error {
 	a.Mutex.Lock()
 	defer a.Mutex.Unlock()
-
-	logFilePath := filepath.Join(".", "stats.log")
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("failed to get user home directory: %w", err)
+	}
+	logFilePath := filepath.Join(homeDir, "logs", "stats.log")
+	err = os.MkdirAll(filepath.Dir(logFilePath), 0755)
+	if err != nil {
+		return fmt.Errorf("failed to create log directory: %w", err)
+	}
 	file, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-
 	if err != nil {
 		return fmt.Errorf("failed to open stats log file: %w", err)
 	}
@@ -97,6 +104,6 @@ func (a *File) SaveStatsToFile(fileStats string, systemStats string) error {
 		return fmt.Errorf("failed to write stats to file: %w", err)
 	}
 
-	log.Println("Successfully saved stats to file")
+	a.Logger.Println("Successfully saved stats to file at", logFilePath)
 	return nil
 }
