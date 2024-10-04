@@ -7,11 +7,14 @@ import (
 )
 
 func (a *serverApplication) logsHandler(w http.ResponseWriter, r *http.Request) {
-	if a.logDir == "" {
-		a.logDir = "."
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		http.Error(w, "Failed to open log file", http.StatusInternalServerError)
+		a.logger.Printf("Error opening log file: %v", err)
+		return
 	}
 
-	logFilePath := filepath.Join(a.logDir, "stats.log")
+	logFilePath := filepath.Join(homeDir, "logs", "stats.log")
 	file, err := os.Open(logFilePath)
 	if err != nil {
 		http.Error(w, "Failed to open log file", http.StatusInternalServerError)

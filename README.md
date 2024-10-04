@@ -47,6 +47,15 @@ This should start dev build
 ### To run on WINDOWS
 
 ```bash
+In a separate termainal, run these commands first for both dev and prod builds
+
+osqueryi --nodisable_extensions
+osquery> select value from osquery_flags where name = 'extensions_socket';
++-----------------------------------+
+| value                             |
++-----------------------------------+
+| \\.\pipe\shell.em |
++-----------------------------------+
 make run-windows-dev
 ```
 
@@ -56,14 +65,35 @@ For security reasons the user must compile the application on their own
 ```bash
 make build
 ```
-The package will then be in the build bin folder. Click to run the application
+The package will then be in the cmd/api/build/bin folder. Click to run the application
 
 
 ### To build WINDOWS msi installer
 ```bash
 make build-nsis
 ```
-The package will then be in the build bin folder, run the msi installer and then follow the instructions.
+The package will then be in the  cmd/api/build/bin folder , run the msi installer and then follow the instructions.
+
+
+### To test endpoints
+
+Generic api key is used for easy testing
+
+## logs
+curl --location 'http://localhost:4000/v1/stats' \
+--header 'X-API-Key: testing123'
+
+## health
+curl --location 'http://localhost:4000/v1/health' \
+--header 'X-API-Key: testing123'
+
+## commands
+curl --location 'http://localhost:4000/v1/command' \
+--header 'X-API-Key: testing123' \
+--header 'Content-Type: application/json' \
+--data '{
+    "command": "ls"
+}'
 
 ### Profiling the application
 
@@ -102,3 +132,4 @@ Refer to Go pprof docs
 1. whitelisting commands remotely
 2. adding more security to endpoints
 3. agnostic configurations
+4. getting the result of queued commands back via asychronous communication

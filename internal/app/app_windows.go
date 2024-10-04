@@ -10,6 +10,7 @@ import (
 	"daemon/internal/tray"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -24,6 +25,7 @@ type App struct {
 	ctx         context.Context
 	config      Config
 	logger      *log.Logger
+	logBuffer   *bytes.Buffer
 	osquery     query.Osquery
 	WorkerQueue chan string
 	timerLogs   []string
@@ -37,10 +39,13 @@ type App struct {
 }
 
 func NewApp() *App {
+	logBuffer := new(bytes.Buffer)
+	multiWriter := io.MultiWriter(os.Stdout, logBuffer)
 	return &App{
 		WorkerQueue: make(chan string, 100),
 		timerLogs:   []string{},
-		logger:      log.New(os.Stdout, "AppLogger: ", log.LstdFlags),
+		logBuffer:   logBuffer,
+		logger:      log.New(multiWriter, "AppLogger: ", log.LstdFlags),
 		stopWorker:  make(chan struct{}),
 		stopTimer:   make(chan struct{}),
 	}
@@ -64,6 +69,17 @@ func (a *App) Startup(ctx context.Context) {
 	err = a.Server.ListenAndServe()
 	a.logger.Fatal(err)
 	systray.Run(tray.CreateSystemTray(ctx), func() {})
+}
+
+func (a *App) FetchLogs() (string, error) {
+	a.mutex.Lock()
+	defer a.mutex.Unlock()
+
+	logs := a.logBuffer.String()
+
+	a.logBuffer.Reset()
+
+	return logs, nil
 }
 
 func (a *App) StartService() (string, error) {
@@ -141,6 +157,7 @@ func (a *App) timerThread() {
 		a.osquery.OsquerySocketPath,
 		a.config.MonitorDirectory,
 		a.mutex,
+		a.logger,
 	}
 
 	if a.config.CheckFrequency == 0 {
